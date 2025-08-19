@@ -94,8 +94,12 @@ class AdataDatafeed(BaseDatafeed):
         datafeed = to_adata_quote(exchange)
 
         try:
-            d1: DataFrame = datafeed.get_market(
-                stock_code=symbol, k_type=1, start_date=start, end_date=end)
+            if 'ind' in symbol:
+                d1: DataFrame = datafeed.get_market_index(
+                    index_code=symbol.split('-')[1], k_type=1, start_date=start)
+            else:
+                d1: DataFrame = datafeed.get_market(
+                    stock_code=symbol, k_type=1, start_date=start, end_date=end)
         except IOError as ex:
             output(f"发生输入/输出错误：{ex}")
             return []
@@ -123,7 +127,10 @@ class AdataDatafeed(BaseDatafeed):
                 dt = dt.replace(tzinfo=CHINA_TZ)
 
                 volume = row['volume']
-                turnover = row['turnover_ratio']
+                if 'turnover_ratio' in row:
+                    turnover = row['turnover_ratio']
+                else:
+                    turnover = 0
                 open_interest = 0
                 open_price = row['open']
                 high_price = row['high']
