@@ -54,16 +54,6 @@ INTERVAL_ADJUSTMENT_MAP: Dict[Interval, int] = {
 CHINA_TZ = ZoneInfo("Asia/Shanghai")
 
 
-def to_adata_quote(exchange):
-    """选择股票"""
-    if exchange in STOCK_LIST:
-        datafeed = getattr(adata.stock, 'market')
-    else:
-        return None
-
-    return datafeed
-
-
 class AdataDatafeed(BaseDatafeed):
     """Adata数据服务接口"""
 
@@ -91,14 +81,15 @@ class AdataDatafeed(BaseDatafeed):
         start: datetime = req.start.strftime("%Y-%m-%d")
         end: datetime = req.end.strftime("%Y-%m-%d")
 
-        datafeed = to_adata_quote(exchange)
-
         try:
             if 'ind' in symbol:
-                d1: DataFrame = datafeed.get_market_index(
+                d1: DataFrame = adata.stock.market.get_market_index(
                     index_code=symbol.split('-')[1], k_type=1, start_date=start)
+            elif 'etf' in symbol:
+                d1: DataFrame = adata.fund.market.get_market_etf(
+                    fund_code=symbol.split('-')[1], k_type=1, start_date=start, end_date=end)
             else:
-                d1: DataFrame = datafeed.get_market(
+                d1: DataFrame = adata.stock.market.get_market(
                     stock_code=symbol, k_type=1, start_date=start, end_date=end)
         except IOError as ex:
             output(f"发生输入/输出错误：{ex}")
